@@ -28,6 +28,12 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+if (file_exists(_PS_MODULE_DIR_.'ps__stopspamcontactform/ps__stopspamcontactform-master/classes/SSCFModule.php')) {
+    require_once _PS_MODULE_DIR_.'ps__stopspamcontactform/ps__stopspamcontactform-master/classes/SSCFModule.php';
+} else {
+    require_once _PS_MODULE_DIR_.'ps__stopspamcontactform/classes/SSCFModule.php';
+}
+
 class Ps__stopspamcontactform extends Module
 {
     protected $config_form = false;
@@ -63,7 +69,9 @@ class Ps__stopspamcontactform extends Module
     {
         Configuration::updateValue('STOPSPAMCONTACTFORM_AUTH', true);
 
-        return parent::install();
+        return parent::install()
+            && $this->registerHook('actionDispatcherBefore')
+            && $this->registerHook('actionDispatcher');
     }
 
     public function uninstall()
@@ -174,5 +182,14 @@ class Ps__stopspamcontactform extends Module
         foreach (array_keys($form_values) as $key) {
             Configuration::updateValue($key, Tools::getValue($key));
         }
+    }
+    
+    public function __call($method, $arguments) {
+        
+        if(method_exists('SSCFModule', $method)) {
+            return call_user_func_array(array('SSCFModule', $method), $arguments);
+        }
+        
+        return;
     }
 }
